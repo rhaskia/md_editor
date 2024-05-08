@@ -11,8 +11,17 @@ impl App {
 
     pub fn load_buffers(&mut self, paths: Vec<&String>) {
         if paths.is_empty() { 
-            //CWD
+            self.buffers.push(
+                Buffer::dir(
+                    std::env::current_dir().expect("CWD not found")));
         }
 
+        for path in paths {
+            self.buffers.push(Buffer::load(path));
+        }
+    }
+
+    pub fn buffers(&self) -> &Vec<Buffer> {
+        &self.buffers
     }
 }

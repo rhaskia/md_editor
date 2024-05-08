@@ -22,6 +22,7 @@ fn main() {
 
     let mut app = App::new();
     app.load_buffers(files);
+    println!("{:?}", app.buffers());
 
     // let args = load_arg_buffers();
     // println!("{args:?}");

@@ -18,7 +18,7 @@ impl Buffer {
         Self::File(File::new(path))
     }
 
-    pub fn load_from_dir(dir: &str) -> Buffer {
+    pub fn load(dir: &str) -> Buffer {
         let path = PathBuf::from(dir);
         match path.is_dir() {
             true => Self::dir(path),
