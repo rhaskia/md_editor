@@ -1,6 +1,6 @@
 use crate::cursor::Cursor;
 use crate::document::Document;
-use std::path::Path;
+use std::path::PathBuf;
 use std::fs;
 
 #[derive(Debug)]
@@ -19,8 +19,11 @@ impl Buffer {
     }
 
     pub fn load_from_dir(dir: &str) -> Buffer {
-        fs::load(dir);
-
+        let path = PathBuf::from(dir);
+        match path.is_dir() {
+            true => Self::dir(path),
+            false => Self::file(path),
+        }
     }
 }
 
@@ -38,6 +41,6 @@ impl Directory {
 
 impl File {
     pub fn new(path: PathBuf) -> Self {
-        Self { path, cursor: Cursor::default(), document: Document::load(path) }
+        Self { path: path.clone(), cursor: Cursor::default(), document: Document::load(path) }
     }
 }

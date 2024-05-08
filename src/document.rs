@@ -1,4 +1,7 @@
-struct Document {
+use std::path::PathBuf;
+
+#[derive(Debug)]
+pub struct Document {
     buffer: String
 }
 
