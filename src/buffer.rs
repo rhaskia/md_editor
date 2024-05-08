@@ -1,4 +1,6 @@
 use crate::cursor::Cursor;
+use crate::document::Document;
+use std::path::Path;
 
 #[derive(Debug)]
 pub enum Buffer {
@@ -12,8 +14,11 @@ impl Buffer {
     }
 }
 
+#[derive(Debug)]
 pub struct Directory { path: Path, cursor: Cursor }
-pub struct File { path: Path, cursor: Cursor, buffer: String } // Rope
+
+#[derive(Debug)]
+pub struct File { path: Path, cursor: Cursor, buffer: Document }
 
 impl Directory { 
     pub fn new(path: Path) -> Self {
