@@ -2,13 +2,16 @@ mod buffer;
 mod app;
 mod cursor;
 mod document;
+
 use buffer::Buffer;
-use clap::arg;
-use clap::Command;
+use clap::{Command, arg};
 use clap::parser::ValuesRef;
 use app::App;
+use std::io;
 
-fn main() {
+fn main() -> Result<(), std::io::Error> {
+    let mut stdout = io::stdout();
+
     let matches = Command::new("Text")
         .about("Yes")
         .arg(arg!([files] ... "Files to open"))
@@ -17,12 +20,13 @@ fn main() {
     let files = matches.get_many::<String>("files")
         .unwrap_or_default()
         .collect::<Vec<&String>>();
-
-    println!("{:?}", files);
-
+    
     let mut app = App::new();
     app.load_buffers(files);
+    println!("{:?}", app.buffers());
 
-    // let args = load_arg_buffers();
-    // println!("{args:?}");
+    app.run();
+
+    Ok(())
 }
+

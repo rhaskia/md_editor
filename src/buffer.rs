@@ -18,7 +18,7 @@ impl Buffer {
         Self::File(File::new(path))
     }
 
-    pub fn load_from_dir(dir: &str) -> Buffer {
+    pub fn load(dir: &str) -> Buffer {
         let path = PathBuf::from(dir);
         match path.is_dir() {
             true => Self::dir(path),
@@ -31,7 +31,11 @@ impl Buffer {
 pub struct Directory { path: PathBuf, cursor: Cursor }
 
 #[derive(Debug)]
-pub struct File { path: PathBuf, cursor: Cursor, document: Document }
+pub struct File { 
+    path: PathBuf,
+    cursor: Cursor,
+    document: Document
+}
 
 impl Directory { 
     pub fn new(path: PathBuf) -> Self {
