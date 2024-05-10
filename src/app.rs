@@ -1,4 +1,5 @@
 use crate::buffer::Buffer;
+use crate::renderer::Renderer;
 use crossterm::event::Event;
 use crossterm::event::read;
 use crossterm::terminal::{enable_raw_mode, disable_raw_mode};
@@ -12,21 +13,21 @@ use modalkit::editing::context::EditContext;
 use modalkit::prelude::{CommandType, Specifier, Char};
 
 pub struct App {
-    stdout: Stdout,
     buffers: Vec<Buffer>,
     state: VimMachine<TerminalKey>,
     command_type: Option<CommandType>,
     bar_input: String,
+    renderer: Renderer,
 }
 
 impl App {
     pub fn new() -> Self {
         Self { 
             buffers: Vec::new(), 
-            stdout: stdout(), 
             state: default_vim_keys(),
             command_type: None,
             bar_input: String::new(),
+            renderer: Renderer::new(),
         }
     }
 
@@ -49,13 +50,15 @@ impl App {
     #[throws]
     pub fn run(&mut self) -> Result<(), Error> {
         enable_raw_mode()?;
+        self.renderer.enter_screen();
         self.update();
         disable_raw_mode()?;
+        self.renderer.exit_screen();
         Ok(())
     }
 
     #[throws]
-    pub fn update(&mut self) -> Result<(), Error> {
+    pub fn update(&mut self) {
         loop {
             let event = read()?;
 
@@ -64,10 +67,15 @@ impl App {
                 Key(key) => self.state.input_key(key.into()), 
                 _ => {}
             }
-            let (act, ctx) = match self.state.pop() { Some(s) => s, None => continue };
-            write!(&self.stdout, "\r");
-            println!("{:?}, {act:?}, {ctx:?}", event);
-            self.handle_action(act, ctx);
+
+            while let Some((act, ctx)) = self.state.pop() {
+                //println!("\r{act:?}");
+                self.handle_action(act, ctx);
+            }
+
+            if self.buffers().len() == 0 {
+                break;
+            }
         }
     }
 
@@ -108,11 +116,12 @@ impl App {
     pub fn call_command(&mut self) {
         match self.bar_input.as_str() {
             "q" => self.close_buffer(),
-            _ => panic!("Unknown command"),
+            _ => self.renderer.draw_command_out(
+                &format!("command not found: {}", self.bar_input)),
         }
     }
 
-    pub fn close_buffer(&mut self) { panic!(); }
+    pub fn close_buffer(&mut self) { self.buffers.pop(); }
 
     pub fn handle_editor(&mut self, action: EditorAction, ctx: EditContext) {
         use EditorAction::*;
@@ -141,6 +150,7 @@ impl App {
 
         if let Some(bar) = &self.command_type {
             self.bar_input.push_str(&text);
+            self.renderer.draw_command_bar(&self.bar_input, bar);
         }
         // Insert into doc
     }
@@ -155,8 +165,12 @@ impl App {
     pub fn handle_c_bar(&mut self, action: CommandBarAction, ctx: EditContext) {
         use CommandBarAction::*;
         match action {
-            Focus(command_type) => self.command_type = Some(command_type),
+            Focus(command_type) => {
+                self.command_type = Some(command_type);
+                self.bar_input = String::new();
+            },
             Unfocus => self.command_type = None,    
         } 
+        self.renderer.draw_command_out("");
     }
 }

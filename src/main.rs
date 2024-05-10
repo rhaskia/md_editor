@@ -2,6 +2,7 @@ mod buffer;
 mod app;
 mod cursor;
 mod document;
+mod renderer;
 
 use buffer::Buffer;
 use clap::{Command, arg};
