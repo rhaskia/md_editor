@@ -3,11 +3,12 @@ use modalkit::prelude::CommandType;
 use crossterm::execute;
 use crossterm::cursor::MoveTo;
 use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen, Clear, ClearType};
+use crate::buffer::{Directory, File, Buffer};
 
 pub struct Renderer {
     out: Stdout,
-    cols: usize, 
-    rows: usize,
+    cols: u16, 
+    rows: u16,
 }
 
 impl Renderer {
@@ -22,14 +23,14 @@ impl Renderer {
     pub fn draw_command_bar(&mut self, input: &str, bar_type: &CommandType) {
         use CommandType::*;
         let pre = match bar_type {
-            Search => "/",
+            Search => "search=",
             Command => ":",
         };
         self.draw_command_out(&format!("{pre}{input}"))
     }
 
     pub fn draw_command_out(&mut self, input: &str) {
-        execute!(&self.out, MoveTo(0, self.rows as u16));
+        execute!(&self.out, MoveTo(0, self.rows));
         execute!(&self.out, Clear(ClearType::CurrentLine));
         write!(&self.out, "{}", input);
         self.out.flush();
@@ -43,5 +44,29 @@ impl Renderer {
 
     pub fn exit_screen(&mut self) {
         execute!(&self.out, LeaveAlternateScreen);
+    }
+
+    pub fn resize(&mut self, cols: u16, rows: u16) {
+        self.rows = rows;
+        self.cols = cols;
+    }
+}
+
+impl Renderer {
+    pub fn draw_buffer(&mut self, buffer: &Buffer) {
+        execute!(&self.out, MoveTo(0, 1));
+        use Buffer::*;
+        match buffer {
+            Directory(d) => self.draw_dir(d),
+            File(f) => self.draw_file(f),
+        }
+    } 
+
+    pub fn draw_dir(&mut self, dir: &Directory) {
+        write!(&self.out, "{:?}", dir.path); 
+    }
+
+    pub fn draw_file(&mut self, file: &File) {
+        write!(&self.out, "{}", file.document.text()); 
     }
 }

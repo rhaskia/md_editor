@@ -28,13 +28,13 @@ impl Buffer {
 }
 
 #[derive(Debug)]
-pub struct Directory { path: PathBuf, cursor: Cursor }
+pub struct Directory { pub path: PathBuf, cursor: Cursor }
 
 #[derive(Debug)]
 pub struct File { 
-    path: PathBuf,
+    pub path: PathBuf,
     cursor: Cursor,
-    document: Document
+    pub document: Document
 }
 
 impl Directory { 

@@ -12,4 +12,8 @@ impl Document {
         let buffer = std::fs::read_to_string(path).unwrap();
         Document { buffer, last_saved: Instant::now() }
     }
+
+    pub fn text(&self) -> &str {
+        &self.buffer
+    }
 }

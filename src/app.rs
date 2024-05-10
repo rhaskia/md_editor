@@ -2,7 +2,7 @@ use crate::buffer::Buffer;
 use crate::renderer::Renderer;
 use crossterm::event::Event;
 use crossterm::event::read;
-use crossterm::terminal::{enable_raw_mode, disable_raw_mode};
+use crossterm::terminal::{enable_raw_mode, disable_raw_mode, size};
 use std::io::{Error, stdout, Stdout, Write};
 use modalkit::env::vim::keybindings::{default_vim_keys, VimMachine};
 use modalkit::key::TerminalKey;
@@ -49,9 +49,14 @@ impl App {
 
     #[throws]
     pub fn run(&mut self) -> Result<(), Error> {
+        let (c, r) = size()?;
+        self.renderer.resize(c, r);
         enable_raw_mode()?;
         self.renderer.enter_screen();
+        self.renderer.draw_buffer(&self.buffers[0]);
+
         self.update();
+
         disable_raw_mode()?;
         self.renderer.exit_screen();
         Ok(())
@@ -65,6 +70,7 @@ impl App {
             use Event::*;
             match event {
                 Key(key) => self.state.input_key(key.into()), 
+                Resize(c, r) => self.renderer.resize(c, r),
                 _ => {}
             }
 
@@ -168,9 +174,12 @@ impl App {
             Focus(command_type) => {
                 self.command_type = Some(command_type);
                 self.bar_input = String::new();
+                self.renderer.draw_command_bar("", &command_type); 
             },
-            Unfocus => self.command_type = None,    
+            Unfocus => {
+                self.command_type = None;   
+                self.renderer.draw_command_out("");
+            }
         } 
-        self.renderer.draw_command_out("");
     }
 }
